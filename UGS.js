@@ -1,10 +1,35 @@
-// UGS.js – Remove "cl" prefix, alphabetical order, search, random gradients (v1.0.13)
+// UGS.js – Sidebar, golden‑angle gradients, no‑blue hover, search hides sections (v1.0.14)
 (function() {
-
-    // --- CSS helper for hiding during search ---
+    // Inject CSS for hidden elements
     const style = document.createElement('style');
-    style.textContent = `.hidden-btn { display: none !important; }`;
+    style.textContent = `
+        .hidden-btn { display: none !important; }
+        .hidden-section { display: none !important; }
+        .sidebar-btn.dimmed { opacity: 0.4; pointer-events: none; }
+    `;
     document.head.appendChild(style);
+
+    // ---------- Sidebar ----------
+    function buildSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+        // Clear existing
+        sidebar.innerHTML = '';
+
+        const sections = document.querySelectorAll('.letter-section');
+        sections.forEach(sec => {
+            const header = sec.querySelector('.letter-header');
+            if (!header) return;
+            const letter = header.textContent.trim();
+            const btn = document.createElement('button');
+            btn.className = 'sidebar-btn';
+            btn.textContent = letter;
+            btn.addEventListener('click', () => {
+                sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            sidebar.appendChild(btn);
+        });
+    }
 
     // ---------- Rename ----------
     function renameButtons() {
@@ -23,8 +48,7 @@
     function fixEmptyButtons() {
         document.querySelectorAll('.buttons-container > *').forEach(btn => {
             let text = (btn.value || btn.textContent || '').trim().toLowerCase();
-            if (text === 'no files' || text === 'nofiles') {
-                // Replace the button with a simple text element
+            if (text === 'no files' || text === 'nofiles' || text === '') {
                 const span = document.createElement('span');
                 span.textContent = 'No files';
                 span.style.color = 'rgba(255,255,255,0.6)';
@@ -35,47 +59,70 @@
         });
     }
 
-    // ---------- Assign random gradients ----------
-    function assignRandomGradients() {
-        const buttons = document.querySelectorAll('.buttons-container > *');
-        buttons.forEach(btn => {
-            // Skip if it's not an actual button/input
-            if (btn.tagName.toLowerCase() !== 'input' && btn.tagName.toLowerCase() !== 'button') return;
-            // Generate a vibrant, unique gradient
-            const hue1 = Math.floor(Math.random() * 360);
-            const hue2 = (hue1 + 40 + Math.floor(Math.random() * 80)) % 360;
-            const gradient = `linear-gradient(135deg, hsl(${hue1}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
+    // ---------- Golden‑angle unique gradients ----------
+    function assignUniqueGradients() {
+        const buttons = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
+        buttons.forEach((btn, index) => {
+            // Golden angle: 137.5° ensures hues are well‑spaced
+            const hue = (index * 137.5) % 360;
+            const hue2 = (hue + 60) % 360;   // complementary offset
+            const gradient = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
             btn.style.background = gradient;
         });
     }
 
-    // ---------- Search ----------
+    // ---------- Search with section hiding ----------
     function setupSearch() {
         const searchInput = document.getElementById('searchInput');
         const noResults = document.getElementById('noResults');
-        if (!searchInput) {
-            console.warn('UGS: searchInput not found');
-            return;
-        }
+        if (!searchInput) return;
 
         searchInput.addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase().trim();
-            const allItems = document.querySelectorAll('.buttons-container > *'); // includes both buttons and text spans
-            let visible = 0;
+            const sections = document.querySelectorAll('.letter-section');
+            let overallVisible = 0;
 
-            allItems.forEach(el => {
-                // Only hide functional buttons, not the "No files" text (but it can be hidden too if no match)
-                const text = (el.value || el.textContent || '').toLowerCase();
-                if (term === '' || text.includes(term)) {
-                    el.classList.remove('hidden-btn');
-                    visible++;
+            sections.forEach(sec => {
+                const items = sec.querySelectorAll('.buttons-container > *');
+                let sectionVisible = 0;
+
+                items.forEach(el => {
+                    const text = (el.value || el.textContent || '').toLowerCase();
+                    if (term === '' || text.includes(term)) {
+                        el.classList.remove('hidden-btn');
+                        sectionVisible++;
+                    } else {
+                        el.classList.add('hidden-btn');
+                    }
+                });
+
+                if (sectionVisible === 0 && term !== '') {
+                    sec.classList.add('hidden-section');
                 } else {
-                    el.classList.add('hidden-btn');
+                    sec.classList.remove('hidden-section');
+                    overallVisible += sectionVisible;
+                }
+
+                // Update sidebar button opacity
+                const header = sec.querySelector('.letter-header');
+                if (header) {
+                    const letter = header.textContent.trim();
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar) {
+                        const btn = sidebar.querySelector(`.sidebar-btn`);
+                        if (btn && btn.textContent.trim() === letter) {
+                            if (sectionVisible === 0 && term !== '') {
+                                btn.classList.add('dimmed');
+                            } else {
+                                btn.classList.remove('dimmed');
+                            }
+                        }
+                    }
                 }
             });
 
             if (noResults) {
-                noResults.style.display = (visible === 0 && term !== '') ? 'block' : 'none';
+                noResults.style.display = (overallVisible === 0 && term !== '') ? 'block' : 'none';
             }
         });
     }
@@ -83,8 +130,9 @@
     // ---------- Run when buttons exist ----------
     function init() {
         renameButtons();
-        fixEmptyButtons();   // replace any "No files" button
-        assignRandomGradients();  // unique colour per button
+        fixEmptyButtons();
+        assignUniqueGradients();
+        buildSidebar();      // create sidebar after sections are present
         setupSearch();
     }
 
