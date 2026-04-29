@@ -47,7 +47,8 @@
         "ghost", "skeleton", "vampire", "werewolf", "fairy",
         "quest", "adventure", "journey", "mission", "challenge",
         "level", "boss", "enemy", "player", "multiplayer", "online",
-        "simulator", "tycoon", "idle", "clicker", "incremental"
+        "simulator", "tycoon", "idle", "clicker", "incremental","geometry","scratch","Alpha","Metal","Slug",
+        "Clash","Wrestle"
     ].sort((a,b) => b.length - a.length); // longest first
 
     function splitWords(str) {
@@ -65,9 +66,9 @@
                 }
             }
             if (!found) {
-                // Take one character as a fallback
-                words.push(remaining[0]);
-                remaining = remaining.slice(1);
+                // No dictionary match – keep the rest of the string as one chunk
+                words.push(remaining);
+                remaining = '';
             }
         }
         return words;
