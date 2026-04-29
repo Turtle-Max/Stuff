@@ -197,7 +197,7 @@
     "trophy", "leaderboard",
     "top", "global", "regional",
     "friend", "solo", "duo", "squad"
-];.sort((a,b) => b.length - a.length); // longest first
+].sort((a,b) => b.length - a.length); // longest first
 
     function splitWords(str) {
         if (!str) return [str];
