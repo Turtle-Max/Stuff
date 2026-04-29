@@ -1,4 +1,4 @@
-// UGS.js – Sidebar, golden‑angle gradients, no‑blue hover, search hides sections (v1.0.14)
+// UGS.js – Sidebar gradients, unique game gradients, no‑blue hover, search hides sections (v1.0.15)
 (function() {
     // Inject CSS for hidden elements
     const style = document.createElement('style');
@@ -9,21 +9,27 @@
     `;
     document.head.appendChild(style);
 
-    // ---------- Sidebar ----------
+    // ---------- Sidebar with unique gradients ----------
     function buildSidebar() {
         const sidebar = document.getElementById('sidebar');
         if (!sidebar) return;
-        // Clear existing
         sidebar.innerHTML = '';
 
         const sections = document.querySelectorAll('.letter-section');
-        sections.forEach(sec => {
+        sections.forEach((sec, index) => {
             const header = sec.querySelector('.letter-header');
             if (!header) return;
             const letter = header.textContent.trim();
+
             const btn = document.createElement('button');
             btn.className = 'sidebar-btn';
             btn.textContent = letter;
+
+            // Golden‑angle gradient for sidebar (different from game buttons)
+            const hue = (index * 137.5 + 60) % 360;   // offset from game buttons
+            const hue2 = (hue + 50) % 360;
+            btn.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
+
             btn.addEventListener('click', () => {
                 sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
@@ -59,13 +65,12 @@
         });
     }
 
-    // ---------- Golden‑angle unique gradients ----------
+    // ---------- Golden‑angle unique gradients for game buttons ----------
     function assignUniqueGradients() {
         const buttons = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
         buttons.forEach((btn, index) => {
-            // Golden angle: 137.5° ensures hues are well‑spaced
             const hue = (index * 137.5) % 360;
-            const hue2 = (hue + 60) % 360;   // complementary offset
+            const hue2 = (hue + 60) % 360;
             const gradient = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
             btn.style.background = gradient;
         });
@@ -109,14 +114,16 @@
                     const letter = header.textContent.trim();
                     const sidebar = document.getElementById('sidebar');
                     if (sidebar) {
-                        const btn = sidebar.querySelector(`.sidebar-btn`);
-                        if (btn && btn.textContent.trim() === letter) {
-                            if (sectionVisible === 0 && term !== '') {
-                                btn.classList.add('dimmed');
-                            } else {
-                                btn.classList.remove('dimmed');
+                        const btns = sidebar.querySelectorAll('.sidebar-btn');
+                        btns.forEach(btn => {
+                            if (btn.textContent.trim() === letter) {
+                                if (sectionVisible === 0 && term !== '') {
+                                    btn.classList.add('dimmed');
+                                } else {
+                                    btn.classList.remove('dimmed');
+                                }
                             }
-                        }
+                        });
                     }
                 }
             });
