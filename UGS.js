@@ -196,7 +196,7 @@
     "xp", "level", "rank",
     "trophy", "leaderboard",
     "top", "global", "regional",
-    "friend", "solo", "duo", "squad"
+    "friend", "solo", "duo", "squad",
 ].sort((a,b) => b.length - a.length); // longest first
 
     function splitWords(str) {
