@@ -1,91 +1,91 @@
-// UGS.js v1.0.17 – Download buttons integrated + search hides sections
+// UGS.js v1.0.18 – Download buttons attached natively, text preserved
 (function() {
-  // Inject CSS for hidden elements
+  // Inject hidden/UI styles
   const style = document.createElement('style');
   style.textContent = `
     .hidden-btn { display: none !important; }
     .hidden-section { display: none !important; }
     .sidebar-btn.dimmed { opacity: 0.4; pointer-events: none; }
+    .download-btn {
+      position: absolute; bottom: 6px; right: 6px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.4);
+      cursor: pointer; z-index: 999; display: flex;
+      align-items: center; justify-content: center; padding: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .download-btn:hover {
+      background: rgba(0,0,0,0.9);
+      transform: scale(1.15);
+    }
+    .download-btn svg {
+      width: 16px; height: 16px; fill: white; display: block;
+    }
   `;
   document.head.appendChild(style);
 
-  // ---------- Download icon SVG ----------
-  const downloadIconSVG = `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-    </svg>`;
+  // ---------- Download button logic ----------
+  function createDownloadIcon() {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z');
+    svg.appendChild(path);
+    return svg;
+  }
 
-  function addDownloadButtonIfNeeded(gameElement) {
+  function attachDownloadButton(gameElement) {
+    // Avoid duplicates
     if (gameElement.querySelector('.download-btn')) return;
-    // Skip "no files" placeholders (the text content will already be set)
+    // Skip placeholders
     const text = (gameElement.textContent || '').trim().toLowerCase();
     if (text === 'no files' || text === '') return;
 
-    // Ensure the button is relatively positioned
+    // Ensure parent is positioned
     gameElement.style.position = 'relative';
 
     const btn = document.createElement('span');
     btn.className = 'download-btn';
-    btn.innerHTML = downloadIconSVG;
+    btn.appendChild(createDownloadIcon());
     btn.title = 'Download this game';
-    btn.style.cssText = `
-      position:absolute; bottom:6px; right:6px;
-      width:28px; height:28px; border-radius:50%;
-      background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.3);
-      cursor:pointer; z-index:999;
-      display:flex; align-items:center; justify-content:center;
-      padding:0; box-shadow:0 2px 6px rgba(0,0,0,0.4);
-      transition:transform 0.2s, background 0.2s;
-    `;
-    btn.addEventListener('mouseenter', () => {
-      btn.style.background = 'rgba(0,0,0,0.85)';
-      btn.style.transform = 'scale(1.15)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = 'rgba(0,0,0,0.65)';
-      btn.style.transform = 'scale(1)';
-    });
 
-    const svg = btn.querySelector('svg');
-    if (svg) svg.style.cssText = 'width:16px; height:16px; fill:white; display:block;';
-
-    btn.addEventListener('click', async function(e) {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
 
-      // Get the game URL (capturing window.open if needed)
+      // Capture game URL by intercepting window.open
       const originalOpen = window.open;
-      let url = null;
-      // Try to capture the URL by simulating a click on the parent
-      window.open = function(_url, target, features) {
-        url = _url;
+      let capturedUrl = null;
+      window.open = function(url) {
+        capturedUrl = url;
         return null;
       };
       gameElement.click();
       window.open = originalOpen;
 
-      if (!url) {
+      if (!capturedUrl) {
         alert('Could not retrieve game URL.');
         return;
       }
 
-      // Download via fetch
+      // Download via fetch + blob
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network error');
+        const response = await fetch(capturedUrl);
+        if (!response.ok) throw new Error('Fetch failed');
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        const filename = url.split('/').pop() || 'game.html';
-        a.download = filename;
+        a.download = capturedUrl.split('/').pop() || 'game.html';
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        a.remove();
         URL.revokeObjectURL(blobUrl);
       } catch (err) {
         console.warn('Download failed, opening in new tab:', err);
-        originalOpen(url, '_blank');
+        window.open(capturedUrl, '_blank');
       }
     });
 
@@ -113,7 +113,7 @@
     });
   }
 
-  // ---------- Rename (preserve child elements) ----------
+  // ---------- Rename buttons (key fix: preserve children) ----------
   function renameButtons() {
     document.querySelectorAll('.buttons-container > *').forEach(btn => {
       let raw = (btn.value || btn.textContent || '').trim();
@@ -122,18 +122,17 @@
       if (btn.tagName.toLowerCase() === 'input') {
         btn.value = display;
       } else {
-        // Replace text content of the first text node only
+        // Update only the first text node, or create one
         const textNode = Array.from(btn.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
         if (textNode) {
           textNode.textContent = display;
         } else {
-          // No text node: insert one at the beginning
           btn.insertBefore(document.createTextNode(display), btn.firstChild);
         }
       }
 
-      // Now add download button to this element
-      addDownloadButtonIfNeeded(btn);
+      // Now add download button (does nothing if already present)
+      attachDownloadButton(btn);
     });
   }
 
@@ -217,7 +216,7 @@
 
   // ---------- Run when buttons exist ----------
   function init() {
-    renameButtons();
+    renameButtons();        // Rename + attach download buttons
     fixEmptyButtons();
     assignUniqueGradients();
     buildSidebar();
