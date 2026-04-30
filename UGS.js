@@ -1,159 +1,167 @@
 // UGS.js – Sidebar gradients, unique game gradients, no‑blue hover, search hides sections (v1.0.15)
 (function() {
-    // Inject CSS for hidden elements
-    const style = document.createElement('style');
-    style.textContent = `
-        .hidden-btn { display: none !important; }
-        .hidden-section { display: none !important; }
-        .sidebar-btn.dimmed { opacity: 0.4; pointer-events: none; }
-    `;
-    document.head.appendChild(style);
+  // Inject CSS for hidden elements
+  const style = document.createElement('style');
+  style.textContent = `
+    .hidden-btn { display: none !important; }
+    .hidden-section { display: none !important; }
+    .sidebar-btn.dimmed { opacity: 0.4; pointer-events: none; }
+  `;
+  document.head.appendChild(style);
 
-    // ---------- Sidebar with unique gradients ----------
-    function buildSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-        sidebar.innerHTML = '';
+  // ---------- Sidebar with unique gradients ----------
+  function buildSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    sidebar.innerHTML = '';
+    const sections = document.querySelectorAll('.letter-section');
+    sections.forEach((sec, index) => {
+      const header = sec.querySelector('.letter-header');
+      if (!header) return;
+      const letter = header.textContent.trim();
+      const btn = document.createElement('button');
+      btn.className = 'sidebar-btn';
+      btn.textContent = letter;
+      const hue = (index * 137.5 + 60) % 360;
+      const hue2 = (hue + 50) % 360;
+      btn.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
+      btn.addEventListener('click', () => { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      sidebar.appendChild(btn);
+    });
+  }
 
-        const sections = document.querySelectorAll('.letter-section');
-        sections.forEach((sec, index) => {
-            const header = sec.querySelector('.letter-header');
-            if (!header) return;
-            const letter = header.textContent.trim();
+  // ---------- Rename (preserve child elements) ----------
+  function renameButtons() {
+    document.querySelectorAll('.buttons-container > *').forEach(btn => {
+      let raw = (btn.value || btn.textContent || '').trim();
+      let display = raw.replace(/^cl/i, '').replace(/\.html$/i, '');
 
-            const btn = document.createElement('button');
-            btn.className = 'sidebar-btn';
-            btn.textContent = letter;
-
-            // Golden‑angle gradient for sidebar (different from game buttons)
-            const hue = (index * 137.5 + 60) % 360;   // offset from game buttons
-            const hue2 = (hue + 50) % 360;
-            btn.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
-
-            btn.addEventListener('click', () => {
-                sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-            sidebar.appendChild(btn);
+      if (btn.tagName.toLowerCase() === 'input') {
+        btn.value = display;
+      } else {
+        // Preserve child elements by setting only text nodes
+        Array.from(btn.childNodes).forEach(child => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            child.textContent = display;
+          } else {
+            // Keep child elements like download buttons
+            return;
+          }
         });
-    }
-
-    // ---------- Rename ----------
-    function renameButtons() {
-        document.querySelectorAll('.buttons-container > *').forEach(btn => {
-            let raw = (btn.value || btn.textContent || '').trim();
-            let display = raw.replace(/^cl/i, '').replace(/\.html$/i, '');
-            if (btn.tagName.toLowerCase() === 'input') {
-                btn.value = display;
-            } else {
-                btn.textContent = display;
-            }
-        });
-    }
-
-    // ---------- Replace "No files" buttons with text ----------
-    function fixEmptyButtons() {
-        document.querySelectorAll('.buttons-container > *').forEach(btn => {
-            let text = (btn.value || btn.textContent || '').trim().toLowerCase();
-            if (text === 'no files' || text === 'nofiles' || text === '') {
-                const span = document.createElement('span');
-                span.textContent = 'No files';
-                span.style.color = 'rgba(255,255,255,0.6)';
-                span.style.fontStyle = 'italic';
-                span.style.padding = '10px';
-                btn.replaceWith(span);
-            }
-        });
-    }
-
-    // ---------- Golden‑angle unique gradients for game buttons ----------
-    function assignUniqueGradients() {
-        const buttons = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
-        buttons.forEach((btn, index) => {
-            const hue = (index * 137.5) % 360;
-            const hue2 = (hue + 60) % 360;
-            const gradient = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
-            btn.style.background = gradient;
-        });
-    }
-
-    // ---------- Search with section hiding ----------
-    function setupSearch() {
-        const searchInput = document.getElementById('searchInput');
-        const noResults = document.getElementById('noResults');
-        if (!searchInput) return;
-
-        searchInput.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            const sections = document.querySelectorAll('.letter-section');
-            let overallVisible = 0;
-
-            sections.forEach(sec => {
-                const items = sec.querySelectorAll('.buttons-container > *');
-                let sectionVisible = 0;
-
-                items.forEach(el => {
-                    const text = (el.value || el.textContent || '').toLowerCase();
-                    if (term === '' || text.includes(term)) {
-                        el.classList.remove('hidden-btn');
-                        sectionVisible++;
-                    } else {
-                        el.classList.add('hidden-btn');
-                    }
-                });
-
-                if (sectionVisible === 0 && term !== '') {
-                    sec.classList.add('hidden-section');
-                } else {
-                    sec.classList.remove('hidden-section');
-                    overallVisible += sectionVisible;
-                }
-
-                // Update sidebar button opacity
-                const header = sec.querySelector('.letter-header');
-                if (header) {
-                    const letter = header.textContent.trim();
-                    const sidebar = document.getElementById('sidebar');
-                    if (sidebar) {
-                        const btns = sidebar.querySelectorAll('.sidebar-btn');
-                        btns.forEach(btn => {
-                            if (btn.textContent.trim() === letter) {
-                                if (sectionVisible === 0 && term !== '') {
-                                    btn.classList.add('dimmed');
-                                } else {
-                                    btn.classList.remove('dimmed');
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-
-            if (noResults) {
-                noResults.style.display = (overallVisible === 0 && term !== '') ? 'block' : 'none';
-            }
-        });
-    }
-
-    // ---------- Run when buttons exist ----------
-    function init() {
-        renameButtons();
-        fixEmptyButtons();
-        assignUniqueGradients();
-        buildSidebar();      // create sidebar after sections are present
-        setupSearch();
-    }
-
-    function waitForButtons() {
-        if (document.querySelectorAll('.buttons-container > *').length > 0) {
-            init();
-        } else {
-            setTimeout(waitForButtons, 100);
+        // If there's no text node, create one at the beginning
+        if (!Array.from(btn.childNodes).some(child => child.nodeType === Node.TEXT_NODE)) {
+          btn.insertBefore(document.createTextNode(display), btn.firstChild);
         }
-    }
+      }
+    });
+  }
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        waitForButtons();
+  // ---------- Replace "No files" buttons with text ----------
+  function fixEmptyButtons() {
+    document.querySelectorAll('.buttons-container > *').forEach(btn => {
+      let text = (btn.value || btn.textContent || '').trim().toLowerCase();
+      if (text === 'no files' || text === 'nofiles' || text === '') {
+        const span = document.createElement('span');
+        span.textContent = 'No files';
+        span.style.color = 'rgba(255,255,255,0.6)';
+        span.style.fontStyle = 'italic';
+        span.style.padding = '10px';
+        btn.replaceWith(span);
+      }
+    });
+  }
+
+  // ---------- Golden‑angle unique gradients for game buttons ----------
+  function assignUniqueGradients() {
+    const buttons = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
+    buttons.forEach((btn, index) => {
+      const hue = (index * 137.5) % 360;
+      const hue2 = (hue + 60) % 360;
+      const gradient = `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${hue2}, 70%, 50%))`;
+      btn.style.background = gradient;
+    });
+  }
+
+  // ---------- Search with section hiding ----------
+  function setupSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResults');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function(e) {
+      const term = e.target.value.toLowerCase().trim();
+      const sections = document.querySelectorAll('.letter-section');
+      let overallVisible = 0;
+
+      sections.forEach(sec => {
+        const items = sec.querySelectorAll('.buttons-container > *');
+        let sectionVisible = 0;
+
+        items.forEach(el => {
+          const text = (el.value || el.textContent || '').toLowerCase();
+          if (term === '' || text.includes(term)) {
+            el.classList.remove('hidden-btn');
+            sectionVisible++;
+          } else {
+            el.classList.add('hidden-btn');
+          }
+        });
+
+        if (sectionVisible === 0 && term !== '') {
+          sec.classList.add('hidden-section');
+        } else {
+          sec.classList.remove('hidden-section');
+          overallVisible += sectionVisible;
+        }
+
+        // Update sidebar button opacity
+        const header = sec.querySelector('.letter-header');
+        if (header) {
+          const letter = header.textContent.trim();
+          const sidebar = document.getElementById('sidebar');
+          if (sidebar) {
+            const btns = sidebar.querySelectorAll('.sidebar-btn');
+            btns.forEach(btn => {
+              if (btn.textContent.trim() === letter) {
+                if (sectionVisible === 0 && term !== '') {
+                  btn.classList.add('dimmed');
+                } else {
+                  btn.classList.remove('dimmed');
+                }
+              }
+            });
+          }
+        }
+      });
+
+      if (noResults) {
+        noResults.style.display = (overallVisible === 0 && term !== '') ? 'block' : 'none';
+      }
+    });
+  }
+
+  // ---------- Run when buttons exist ----------
+  function init() {
+    renameButtons();
+    fixEmptyButtons();
+    assignUniqueGradients();
+    buildSidebar();
+    setupSearch();
+    // Trigger a custom event to notify that UGS is done modifying buttons
+    document.dispatchEvent(new Event('UGSReady'));
+  }
+
+  function waitForButtons() {
+    if (document.querySelectorAll('.buttons-container > *').length > 0) {
+      init();
     } else {
-        window.addEventListener('DOMContentLoaded', waitForButtons);
+      setTimeout(waitForButtons, 100);
     }
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    waitForButtons();
+  } else {
+    window.addEventListener('DOMContentLoaded', waitForButtons);
+  }
 })();
