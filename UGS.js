@@ -1,4 +1,4 @@
-// UGS.js – Sidebar gradients, unique game gradients, no‑blue hover, search hides sections (v1.0.15)
+// UGS.js v1.0.17 – Download buttons integrated + search hides sections
 (function() {
   // Inject CSS for hidden elements
   const style = document.createElement('style');
@@ -9,7 +9,90 @@
   `;
   document.head.appendChild(style);
 
-  // ---------- Sidebar with unique gradients ----------
+  // ---------- Download icon SVG ----------
+  const downloadIconSVG = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+    </svg>`;
+
+  function addDownloadButtonIfNeeded(gameElement) {
+    if (gameElement.querySelector('.download-btn')) return;
+    // Skip "no files" placeholders (the text content will already be set)
+    const text = (gameElement.textContent || '').trim().toLowerCase();
+    if (text === 'no files' || text === '') return;
+
+    // Ensure the button is relatively positioned
+    gameElement.style.position = 'relative';
+
+    const btn = document.createElement('span');
+    btn.className = 'download-btn';
+    btn.innerHTML = downloadIconSVG;
+    btn.title = 'Download this game';
+    btn.style.cssText = `
+      position:absolute; bottom:6px; right:6px;
+      width:28px; height:28px; border-radius:50%;
+      background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.3);
+      cursor:pointer; z-index:999;
+      display:flex; align-items:center; justify-content:center;
+      padding:0; box-shadow:0 2px 6px rgba(0,0,0,0.4);
+      transition:transform 0.2s, background 0.2s;
+    `;
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = 'rgba(0,0,0,0.85)';
+      btn.style.transform = 'scale(1.15)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = 'rgba(0,0,0,0.65)';
+      btn.style.transform = 'scale(1)';
+    });
+
+    const svg = btn.querySelector('svg');
+    if (svg) svg.style.cssText = 'width:16px; height:16px; fill:white; display:block;';
+
+    btn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+
+      // Get the game URL (capturing window.open if needed)
+      const originalOpen = window.open;
+      let url = null;
+      // Try to capture the URL by simulating a click on the parent
+      window.open = function(_url, target, features) {
+        url = _url;
+        return null;
+      };
+      gameElement.click();
+      window.open = originalOpen;
+
+      if (!url) {
+        alert('Could not retrieve game URL.');
+        return;
+      }
+
+      // Download via fetch
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network error');
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        const filename = url.split('/').pop() || 'game.html';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.warn('Download failed, opening in new tab:', err);
+        originalOpen(url, '_blank');
+      }
+    });
+
+    gameElement.appendChild(btn);
+  }
+
+  // ---------- Sidebar ----------
   function buildSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
@@ -39,28 +122,26 @@
       if (btn.tagName.toLowerCase() === 'input') {
         btn.value = display;
       } else {
-        // Preserve child elements by setting only text nodes
-        Array.from(btn.childNodes).forEach(child => {
-          if (child.nodeType === Node.TEXT_NODE) {
-            child.textContent = display;
-          } else {
-            // Keep child elements like download buttons
-            return;
-          }
-        });
-        // If there's no text node, create one at the beginning
-        if (!Array.from(btn.childNodes).some(child => child.nodeType === Node.TEXT_NODE)) {
+        // Replace text content of the first text node only
+        const textNode = Array.from(btn.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        if (textNode) {
+          textNode.textContent = display;
+        } else {
+          // No text node: insert one at the beginning
           btn.insertBefore(document.createTextNode(display), btn.firstChild);
         }
       }
+
+      // Now add download button to this element
+      addDownloadButtonIfNeeded(btn);
     });
   }
 
-  // ---------- Replace "No files" buttons with text ----------
+  // ---------- Fix "No files" placeholders ----------
   function fixEmptyButtons() {
     document.querySelectorAll('.buttons-container > *').forEach(btn => {
       let text = (btn.value || btn.textContent || '').trim().toLowerCase();
-      if (text === 'no files' || text === 'nofiles' || text === '') {
+      if (text === 'no files' || text === '') {
         const span = document.createElement('span');
         span.textContent = 'No files';
         span.style.color = 'rgba(255,255,255,0.6)';
@@ -71,7 +152,7 @@
     });
   }
 
-  // ---------- Golden‑angle unique gradients for game buttons ----------
+  // ---------- Golden‑angle unique gradients ----------
   function assignUniqueGradients() {
     const buttons = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
     buttons.forEach((btn, index) => {
@@ -82,7 +163,7 @@
     });
   }
 
-  // ---------- Search with section hiding ----------
+  // ---------- Search ----------
   function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const noResults = document.getElementById('noResults');
@@ -114,20 +195,14 @@
           overallVisible += sectionVisible;
         }
 
-        // Update sidebar button opacity
         const header = sec.querySelector('.letter-header');
         if (header) {
           const letter = header.textContent.trim();
           const sidebar = document.getElementById('sidebar');
           if (sidebar) {
-            const btns = sidebar.querySelectorAll('.sidebar-btn');
-            btns.forEach(btn => {
+            sidebar.querySelectorAll('.sidebar-btn').forEach(btn => {
               if (btn.textContent.trim() === letter) {
-                if (sectionVisible === 0 && term !== '') {
-                  btn.classList.add('dimmed');
-                } else {
-                  btn.classList.remove('dimmed');
-                }
+                btn.classList.toggle('dimmed', sectionVisible === 0 && term !== '');
               }
             });
           }
@@ -147,8 +222,6 @@
     assignUniqueGradients();
     buildSidebar();
     setupSearch();
-    // Trigger a custom event to notify that UGS is done modifying buttons
-    document.dispatchEvent(new Event('UGSReady'));
   }
 
   function waitForButtons() {
