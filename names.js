@@ -1,5 +1,4 @@
-<script>
-    window._ugsNameMap = {
+window._ugsNameMap = {
 "1": "1",
 "100RoomsOfEnemies": "100 Rooms of Enemies",
 "10bullets": "10 Bullets",
@@ -2697,9 +2696,9 @@
 "zuma": "Zuma",
 "zumashooter": "Zuma Shooter"
 };
-    // Build reverse map: pretty name -> original key
-    window._ugsReverseNameMap = {};
-    for (var _k in window._ugsNameMap) {
-        window._ugsReverseNameMap[window._ugsNameMap[_k]] = _k;
-    }
-    </script>
+// Build reverse map: pretty name -> original key
+window._ugsReverseNameMap = {};
+for (var _k in window._ugsNameMap) {
+    window._ugsReverseNameMap[window._ugsNameMap[_k]] = _k;
+}
+
