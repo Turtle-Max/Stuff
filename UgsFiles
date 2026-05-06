@@ -1,0 +1,1076 @@
+<svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Standard SVG shape -->
+  <rect x="10" y="10" width="380" height="180" fill="#f0f0f0" stroke="#ccc"/>
+
+  <!-- HTML Container -->
+  <foreignObject x="50" y="50" width="300" height="100">
+    <!-- Use standard HTML inside here -->
+    <!--UGS Files-->
+    <html>
+    <head>
+        <title>UGS Files</title>
+        <style>
+            /* ===== CONSTELLATION BACKGROUND ===== */
+            body {
+                font-family: Arial, sans-serif;
+                background: #000;
+                min-height: 100vh; margin: 0; padding: 0;
+                display: flex;
+                overflow: hidden;
+            }
+            canvas#constellation-canvas {
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                pointer-events: none;
+            }
+    
+            /* ---- SIDEBAR ---- */
+            .sidebar {
+                position: fixed; left: 0; top: 0;
+                width: 80px; height: 100vh;
+                background: rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(10px);
+                padding: 20px 10px;
+                display: flex; flex-direction: column; gap: 8px;
+                overflow-y: auto;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+                z-index: 1000;
+            }
+            .sidebar::-webkit-scrollbar { width: 6px; }
+            .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+            .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+    
+            .sidebar-btn {
+                border: none; padding: 12px; font-size: 18px; font-weight: 700;
+                border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+                color: white; text-align: center; min-height: 45px;
+            }
+            .sidebar-btn:hover { transform: scale(1.08); filter: brightness(1.1); }
+    
+            /* ---- MAIN CONTENT ---- */
+    
+            .main-content {
+                margin-left: 100px;
+                flex: 1; padding: 20px; max-width: 1200px;
+                position: relative; z-index: 1;
+                overflow-y: auto; height: 100vh;
+            }
+            h1 { color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+            .letter-section { margin-bottom: 40px; padding: 0 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+            .letter-header {
+                color: white; font-size: 32px; font-weight: bold;
+                margin-bottom: 15px; padding-bottom: 10px;
+                border-bottom: 3px solid rgba(255,255,255,0.3);
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+    
+            /* ===== GAME BUTTONS ===== */
+            .buttons-container > * {
+                width: 110px !important; height: 110px !important;
+                min-width: 110px !important; max-width: 110px !important;
+                min-height: 110px !important; max-height: 110px !important;
+                border: none; border-radius: 4px; cursor: pointer;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                transition: all 0.3s ease; color: white; font-weight: 700;
+                font-size: 12px; text-align: center; line-height: 1.2;
+                white-space: normal; word-wrap: break-word; overflow: hidden;
+                text-overflow: ellipsis; padding: 6px;
+                display: inline-flex !important; align-items: center; justify-content: center;
+                box-sizing: border-box;
+            }
+            .buttons-container > *:hover {
+                transform: scale(1.08) !important;
+                box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            }
+            .buttons-container > *:active {
+                transform: scale(0.96) !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+            .buttons-container {
+                display: flex; flex-wrap: wrap; gap: 16px;
+                justify-content: flex-start;
+                padding: 20px 0;
+            }
+    
+            .empty-message { color: rgba(255,255,255,0.6); font-style: italic; text-align: center; padding: 20px; }
+            .no-results { color: rgba(255,255,255,0.6); text-align: center; font-style: italic; padding: 20px; display: none; }
+            #lolbutton {
+                background: linear-gradient(135deg, #00b2ff, #006aff);
+                border: none; border-radius: 4px; padding: 10px 20px; font-size: 14px;
+                font-weight: 700; color: white; cursor: pointer;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                transition: all 0.3s ease; margin: 10px auto; display: block; width: fit-content;
+            }
+            #lolbutton:hover { transform: scale(1.05); background: linear-gradient(135deg, #33ccff, #3385ff); }
+    
+            /* ===== GAME OVERLAY (iframe) ===== */
+            .game-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                background: rgba(0, 0, 0, 0.92);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+            .game-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            .game-overlay-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 20px;
+                background: rgba(0, 0, 0, 0.6);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+                flex-shrink: 0;
+            }
+            .game-overlay-title {
+                color: white;
+                font-size: 18px;
+                font-weight: 600;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            }
+            .game-overlay-close {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                font-size: 24px;
+                width: 36px;
+                height: 36px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                line-height: 1;
+            }
+            .game-overlay-close:hover {
+                background: rgba(255, 70, 70, 0.6);
+                border-color: rgba(255, 70, 70, 0.8);
+            }
+            .game-overlay-newtab,
+            .game-overlay-download,
+            .game-overlay-pause {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                width: 36px;
+                height: 36px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+                padding: 0;
+            }
+            .game-overlay-newtab:hover {
+                background: rgba(100, 180, 255, 0.4);
+                border-color: rgba(100, 180, 255, 0.6);
+            }
+            .game-overlay-download:hover {
+                background: rgba(0, 120, 255, 0.5);
+                border-color: rgba(100, 180, 255, 0.6);
+            }
+            .game-overlay-pause:hover {
+                background: rgba(255, 200, 50, 0.4);
+                border-color: rgba(255, 200, 50, 0.6);
+            }
+            .game-overlay-newtab svg,
+            .game-overlay-download svg,
+            .game-overlay-pause svg {
+                width: 18px;
+                height: 18px;
+                stroke: white;
+                fill: none;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+            .game-overlay-download svg {
+                fill: white;
+                stroke: none;
+            }
+            .game-overlay-pause svg {
+                fill: white;
+                stroke: none;
+            }
+            .game-overlay-actions {
+                display: flex;
+                gap: 8px;
+            }
+            .game-overlay-iframe {
+                flex: 1;
+                width: 100%;
+                border: none;
+                background: #000;
+            }
+    
+            @media (max-width: 768px) {
+                .sidebar { width: 60px; padding: 15px 5px; }
+                .sidebar-btn { padding: 8px; font-size: 16px; }
+                .main-content { margin-left: 70px; }
+                .buttons-container > * {
+                    width: 90px !important; height: 90px !important;
+                    min-width: 90px !important; max-width: 90px !important;
+                    min-height: 90px !important; max-height: 90px !important;
+                    font-size: 10px; padding: 4px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="constellation-canvas"></canvas>
+    
+        <div class="sidebar" id="sidebar"></div>
+    
+        <div class="main-content">
+            <h1>UGS Files</h1>
+            <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
+                Files from
+                <a href="https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/"
+                   target="_blank"
+                   style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                    Ultimate Game Stash Google Doc
+                </a>
+            </h2>
+            <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
+                Discord Server:
+                <a href="https://discord.gg/rmVsAqkpkA"
+                   target="_blank"
+                   style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                    https://discord.gg/rmVsAqkpkA
+                </a>
+            </h2>
+    
+            <button id="lolbutton" onclick="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@latest/game.js';document.body.appendChild(s);">
+                Click to load if it isnt loading
+            </button>
+            <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
+                <input type="text" placeholder="Search..." id="searchInput"
+                       style="padding: 13px; width: 100%; max-width: 420px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(7, 105, 218, 0.1);">
+            </h2>
+            <div id="sections-container"></div>
+            <div class="no-results" id="noResults">No games found matching your search.</div>
+        </div>
+    
+        <!-- Game iframe overlay -->
+        <div class="game-overlay" id="game-overlay">
+            <div class="game-overlay-header">
+                <div class="game-overlay-title" id="game-overlay-title">Game</div>
+                <div class="game-overlay-actions">
+                    <button class="game-overlay-pause" id="game-overlay-pause" title="Pause">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <rect x="6" y="4" width="4" height="16" rx="1"/>
+                            <rect x="14" y="4" width="4" height="16" rx="1"/>
+                        </svg>
+                    </button>
+                    <button class="game-overlay-download" id="game-overlay-download" title="Download">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 16l-5-5h3V4h4v7h3l-5 5z"/>
+                            <path d="M20 18H4v2h16v-2z"/>
+                        </svg>
+                    </button>
+                    <button class="game-overlay-newtab" id="game-overlay-newtab" title="Open in new tab">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M14 3h7v7"/>
+                            <path d="M10 14L21 3"/>
+                            <path d="M21 14v7H3V3h7"/>
+                        </svg>
+                    </button>
+                    <button class="game-overlay-close" id="game-overlay-close" title="Close">×</button>
+                </div>
+            </div>
+            <iframe class="game-overlay-iframe" id="game-overlay-iframe"></iframe>
+        </div>
+    
+        <!-- 1a. Pretty display name map -->
+        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.20/names.js"></script>
+        
+        <!-- 1b. Games data -->
+        <script src="https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/games.js"></script>
+    
+        <!-- 2. UGS script -->
+        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.20/UGS.js"></script>
+    
+        <!-- 2b. Apply pretty display names from _ugsNameMap -->
+        <script>
+        (function() {
+            function applyNameMap() {
+                var btns = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
+                btns.forEach(function(btn) {
+                    var currentText = (btn.value || btn.textContent || '').trim();
+                    if (!currentText) return;
+                    // If we already stored the original name, use that for lookup
+                    var originalName = btn.getAttribute('data-original-name');
+                    if (originalName) {
+                        var prettyName = window._ugsNameMap && window._ugsNameMap[originalName];
+                        if (prettyName && currentText !== prettyName) {
+                            if (btn.tagName === 'INPUT') { btn.value = prettyName; }
+                            else { btn.textContent = prettyName; }
+                        }
+                        return;
+                    }
+                    // First time: try lookup with current text
+                    if (window._ugsNameMap && window._ugsNameMap[currentText]) {
+                        btn.setAttribute('data-original-name', currentText);
+                        var prettyName = window._ugsNameMap[currentText];
+                        if (btn.tagName === 'INPUT') { btn.value = prettyName; }
+                        else { btn.textContent = prettyName; }
+                    }
+                });
+            }
+    
+            // Run repeatedly to override UGS.js renameButtons() which strips "cl" prefix
+            var intervals = [50, 100, 200, 300, 500, 800, 1000, 1500, 2000, 3000, 5000];
+            intervals.forEach(function(ms) { setTimeout(applyNameMap, ms); });
+    
+            // Also re-apply on any DOM changes (UGS.js may rename after us)
+            var sectionsContainer = document.getElementById('sections-container');
+            if (sectionsContainer) {
+                new MutationObserver(function() {
+                    setTimeout(applyNameMap, 10);
+                    setTimeout(applyNameMap, 100);
+                }).observe(sectionsContainer, { childList: true, subtree: true });
+            }
+    
+            // Also observe attribute changes on buttons (UGS.js may set .value)
+            document.addEventListener('DOMContentLoaded', function() {
+                var observer = new MutationObserver(function() {
+                    setTimeout(applyNameMap, 10);
+                });
+                observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
+            });
+        })();
+        </script>
+    
+        <!-- 3. Constellation background -->
+        <script>
+            (function() {
+                const canvas = document.getElementById('constellation-canvas');
+                const ctx = canvas.getContext('2d');
+                let stars = [];
+                const starCount = 125;
+                const maxDistance = 150;
+    
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+    
+                class Star {
+                    constructor() {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * canvas.height;
+                        this.vx = (Math.random() - 0.5) * 0.5;
+                        this.vy = (Math.random() - 0.5) * 0.5;
+                        this.radius = Math.random() * 1.8;
+                    }
+                    update() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                    }
+                    draw() {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        ctx.fill();
+                    }
+                }
+    
+                function initStars() {
+                    stars = [];
+                    for (let i = 0; i < starCount; i++) stars.push(new Star());
+                }
+    
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    stars.forEach(s => { s.update(); s.draw(); });
+                    for (let i = 0; i < stars.length; i++) {
+                        for (let j = i + 1; j < stars.length; j++) {
+                            const dx = stars[i].x - stars[j].x;
+                            const dy = stars[i].y - stars[j].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < maxDistance) {
+                                const alpha = 1 - (dist / maxDistance);
+                                ctx.beginPath();
+                                ctx.moveTo(stars[i].x, stars[i].y);
+                                ctx.lineTo(stars[j].x, stars[j].y);
+                                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
+                                ctx.lineWidth = 0.6;
+                                ctx.stroke();
+                                ctx.closePath();
+                            }
+                        }
+                    }
+                    requestAnimationFrame(animate);
+                }
+    
+                window.addEventListener('resize', resize);
+                resize(); initStars(); animate();
+            })();
+        </script>
+    
+        <!-- 4. Space-like gradients -->
+        <script>
+            (function() {
+                const SPACE_GRADIENTS = [
+                    ['#0b0f1c', '#1a1b3a'],
+                    ['#170a2e', '#2d1b4e'],
+                    ['#0a0f24', '#1c2942'],
+                    ['#1a0b2e', '#4b1d52'],
+                    ['#0e132e', '#223a5e'],
+                    ['#100b2a', '#2c1b4d'],
+                    ['#0b1026', '#1f2f5a'],
+                ];
+    
+                const SIDEBAR_GRADIENTS = [
+                    ['#0f1123', '#1a1c3b'],
+                    ['#120a25', '#251a44'],
+                    ['#0a0d20', '#1a213d'],
+                ];
+    
+                function applySpaceGradients() {
+                    const gameBtns = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
+                    gameBtns.forEach((btn, idx) => {
+                        const grad = SPACE_GRADIENTS[idx % SPACE_GRADIENTS.length];
+                        btn.style.background = `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`;
+                    });
+    
+                    const sidebarBtns = document.querySelectorAll('.sidebar-btn');
+                    sidebarBtns.forEach((btn, idx) => {
+                        const grad = SIDEBAR_GRADIENTS[idx % SIDEBAR_GRADIENTS.length];
+                        btn.style.background = `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`;
+                    });
+                }
+    
+                let retries = 0;
+                const MAX_RETRIES = 20;
+                function tryApply() {
+                    const buttons = document.querySelectorAll('.buttons-container > *');
+                    if (buttons.length > 0) {
+                        applySpaceGradients();
+                        setTimeout(applySpaceGradients, 200);
+                        setTimeout(applySpaceGradients, 500);
+                        setTimeout(applySpaceGradients, 1000);
+                        var sectionsContainer = document.getElementById('sections-container');
+                        if (sectionsContainer) {
+                            new MutationObserver(applySpaceGradients).observe(sectionsContainer, {
+                                childList: true,
+                                subtree: true
+                            });
+                        }
+                    } else {
+                        retries++;
+                        if (retries < MAX_RETRIES) setTimeout(tryApply, 300);
+                    }
+                }
+                tryApply();
+            })();
+        </script>
+    
+        <!-- 5. Bounce effect -->
+        <script>
+            (function() {
+                const BOUNCE_PERIOD = 150;
+                const THRESHOLD = 0.0005;
+                const stateMap = new WeakMap();
+    
+                function getState(btn) {
+                    if (!stateMap.has(btn)) {
+                        stateMap.set(btn, { amplitude: 0, hovered: false, intervalId: null });
+                    }
+                    return stateMap.get(btn);
+                }
+    
+                function applyScale(btn, state) {
+                    const base = state.hovered ? 1.08 : 1;
+                    const totalScale = base + state.amplitude;
+                    btn.style.setProperty('transform', `scale(${totalScale})`, 'important');
+                    btn.style.setProperty('--bounce_amplitude', state.amplitude);
+                }
+    
+                function stopBounce(btn, state) {
+                    if (state.intervalId) { clearInterval(state.intervalId); state.intervalId = null; }
+                    const base = state.hovered ? 1.08 : 1;
+                    btn.style.setProperty('transform', `scale(${base})`, 'important');
+                    btn.style.setProperty('--bounce_amplitude', 0);
+                    state.amplitude = 0;
+                }
+    
+                function startBounce(btn, state) {
+                    if (state.intervalId) return;
+                    state.intervalId = setInterval(() => {
+                        applyScale(btn, state);
+                        state.amplitude = state.amplitude * -0.5;
+                        if (Math.abs(state.amplitude) < THRESHOLD) stopBounce(btn, state);
+                    }, BOUNCE_PERIOD);
+                    applyScale(btn, state);
+                }
+    
+                function onMouseEnter(e) {
+                    const btn = e.currentTarget;
+                    const state = getState(btn);
+                    state.hovered = true;
+                    state.amplitude = 0.15;
+                    btn.style.setProperty('--bounce_amplitude', state.amplitude);
+                    startBounce(btn, state);
+                }
+    
+                function onMouseLeave(e) {
+                    const btn = e.currentTarget;
+                    const state = getState(btn);
+                    state.hovered = false;
+                    state.amplitude = -0.15;
+                    btn.style.setProperty('--bounce_amplitude', state.amplitude);
+                    startBounce(btn, state);
+                }
+    
+                function setupButton(btn) {
+                    if (btn.dataset.bounceInit) return;
+                    btn.dataset.bounceInit = 'true';
+                    btn.addEventListener('mouseenter', onMouseEnter);
+                    btn.addEventListener('mouseleave', onMouseLeave);
+                }
+    
+                function setupAllButtons() {
+                    document.querySelectorAll('button, input[type="button"], input[type="submit"]').forEach(setupButton);
+                }
+    
+                const observer = new MutationObserver(mutations => {
+                    for (const mut of mutations) {
+                        mut.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) {
+                                if (node.matches && node.matches('button, input')) setupButton(node);
+                                if (node.querySelectorAll) node.querySelectorAll('button, input').forEach(setupButton);
+                            }
+                        });
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+    
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', setupAllButtons);
+                } else {
+                    setupAllButtons();
+                }
+                setTimeout(setupAllButtons, 1000);
+                setTimeout(setupAllButtons, 3000);
+            })();
+        </script>
+    
+        <!-- 6. Game overlay: TRUE pause on close, Resume? + countdown on re-open, auto-focus -->
+        <script>
+        (function() {
+            var overlay = document.getElementById('game-overlay');
+            var originalIframe = document.getElementById('game-overlay-iframe');
+            var title = document.getElementById('game-overlay-title');
+            var closeBtn = document.getElementById('game-overlay-close');
+            var newTabBtn = document.getElementById('game-overlay-newtab');
+            var downloadBtn = document.getElementById('game-overlay-download');
+            var pauseBtn = document.getElementById('game-overlay-pause');
+    
+            var gameCache = {};
+            var currentGameKey = null;
+            var countdownIntervalId = null;
+    
+            if (originalIframe && originalIframe.parentNode) {
+                originalIframe.parentNode.removeChild(originalIframe);
+            }
+    
+            // ---- Resume / countdown overlay (built once, reused) ----
+            var resumeScreen = document.createElement('div');
+            resumeScreen.id = 'ugs-resume-screen';
+            resumeScreen.style.cssText = [
+                'position:absolute','inset:0','z-index:5',
+                'display:none','flex-direction:column',
+                'align-items:center','justify-content:center',
+                'background:rgba(0,0,0,0.85)','backdrop-filter:blur(6px)',
+                'color:white','font-family:Arial,sans-serif','user-select:none',
+                'transition:background 0.3s ease, backdrop-filter 0.3s ease'
+            ].join(';');
+            resumeScreen.innerHTML =
+                '<div id="ugs-resume-title" style="font-size:28px;font-weight:600;margin-bottom:20px;text-shadow:0 2px 6px rgba(0,0,0,0.5);">Game Paused</div>' +
+                '<button id="ugs-resume-btn" style="background:linear-gradient(135deg,#00b2ff,#006aff);border:none;color:white;font-size:22px;font-weight:700;padding:16px 48px;border-radius:10px;cursor:pointer;box-shadow:0 6px 20px rgba(0,120,255,0.4);transition:transform 0.15s ease, filter 0.15s ease;">Resume?</button>' +
+                '<div id="ugs-countdown" style="font-size:120px;font-weight:800;display:none;-webkit-text-stroke:2px black;"></div>' +
+                '<button id="ugs-skip-btn" style="display:none;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.9);color:white;font-size:16px;font-weight:600;padding:10px 32px;border-radius:8px;cursor:pointer;margin-top:20px;transition:all 0.15s ease;backdrop-filter:blur(4px);">Skip</button>' +
+                '<button id="ugs-exit-btn" style="background:rgba(255,70,70,0.2);border:1px solid rgba(255,70,70,0.4);color:white;font-size:16px;font-weight:600;padding:10px 32px;border-radius:8px;cursor:pointer;margin-top:12px;transition:all 0.15s ease;">Exit Game</button>';
+            overlay.appendChild(resumeScreen);
+            var resumeBtn = resumeScreen.querySelector('#ugs-resume-btn');
+            var resumeTitle = resumeScreen.querySelector('#ugs-resume-title');
+            var countdownEl = resumeScreen.querySelector('#ugs-countdown');
+            var skipBtn = resumeScreen.querySelector('#ugs-skip-btn');
+            var exitBtn = resumeScreen.querySelector('#ugs-exit-btn');
+            resumeBtn.addEventListener('mouseenter', function(){ this.style.transform='scale(1.06)'; this.style.filter='brightness(1.1)'; });
+            resumeBtn.addEventListener('mouseleave', function(){ this.style.transform='scale(1)'; this.style.filter='none'; });
+            skipBtn.addEventListener('mouseenter', function(){ this.style.background='rgba(0,0,0,0.6)'; this.style.borderColor='rgba(255,255,255,1)'; });
+            skipBtn.addEventListener('mouseleave', function(){ this.style.background='rgba(0,0,0,0.5)'; this.style.borderColor='rgba(255,255,255,0.8)'; });
+            exitBtn.addEventListener('mouseenter', function(){ this.style.background='rgba(255,70,70,0.4)'; this.style.borderColor='rgba(255,70,70,0.7)'; });
+            exitBtn.addEventListener('mouseleave', function(){ this.style.background='rgba(255,70,70,0.2)'; this.style.borderColor='rgba(255,70,70,0.4)'; });
+    
+            function showResumeScreen() {
+                resumeBtn.style.display = '';
+                resumeTitle.style.display = '';
+                countdownEl.style.display = 'none';
+                skipBtn.style.display = 'none';
+                exitBtn.style.display = '';
+                resumeScreen.style.background = 'rgba(0,0,0,0.85)';
+                resumeScreen.style.backdropFilter = 'blur(6px)';
+                resumeScreen.style.display = 'flex';
+            }
+            function hideResumeScreen() {
+                resumeScreen.style.display = 'none';
+                skipBtn.style.display = 'none';
+            }
+    
+    
+            function keyFor(displayName) {
+                return 'ugs-save:' + (displayName || '').replace(/[^a-zA-Z0-9 _\-()]/g, '').replace(/\s+/g, '_');
+            }
+    
+            window.addEventListener('message', function(e) {
+                if (!e.data || e.data.type !== 'ugs-ls-bridge') return;
+                var senderKey = null;
+                for (var k in gameCache) {
+                    if (gameCache[k].iframe && gameCache[k].iframe.contentWindow === e.source) {
+                        senderKey = k; break;
+                    }
+                }
+                if (!senderKey) return;
+                var action = e.data.action;
+                if (action === 'get') {
+                    var allData = {};
+                    try { allData = JSON.parse(localStorage.getItem(senderKey) || '{}'); } catch(_) {}
+                    gameCache[senderKey].iframe.contentWindow.postMessage({ type: 'ugs-ls-response', data: allData }, '*');
+                } else if (action === 'set') {
+                    localStorage.setItem(senderKey, JSON.stringify(e.data.data));
+                }
+            });
+    
+            var LS_BRIDGE_SCRIPT = [
+                '<script>',
+                '(function(){',
+                '  var _cache = {};',
+                '  function _syncToParent(){ try { window.parent.postMessage({type:"ugs-ls-bridge",action:"set",data:_cache},"*"); } catch(e){} }',
+                '  function _requestFromParent(){ try { window.parent.postMessage({type:"ugs-ls-bridge",action:"get"},"*"); } catch(e){} }',
+                '  window.addEventListener("message",function(e){',
+                '    if(!e.data)return;',
+                '    if(e.data.type==="ugs-ls-response"){ _cache=e.data.data||{}; return; }',
+                '    if(e.data.type==="ugs-pause"){ __ugsPause(); return; }',
+                '    if(e.data.type==="ugs-resume"){ __ugsResume(); return; }',
+                '  });',
+                '  _requestFromParent();',
+                '  var _obj=Object.create(null);',
+                '  _obj.getItem=function(k){return _cache.hasOwnProperty(k)?_cache[k]:null;};',
+                '  _obj.setItem=function(k,v){_cache[k]=String(v);_syncToParent();};',
+                '  _obj.removeItem=function(k){delete _cache[k];_syncToParent();};',
+                '  _obj.clear=function(){_cache={};_syncToParent();};',
+                '  _obj.key=function(i){return Object.keys(_cache)[i]||null;};',
+                '  Object.defineProperty(_obj,"length",{get:function(){return Object.keys(_cache).length;}});',
+                '  try{Object.defineProperty(window,"localStorage",{value:_obj});}catch(e){}',
+                '  try{window.localStorage=_obj;}catch(e){}',
+                '  var _paused=false;',
+                '  var _origSetTimeout=window.setTimeout.bind(window);',
+                '  var _origClearTimeout=window.clearTimeout.bind(window);',
+                '  var _origSetInterval=window.setInterval.bind(window);',
+                '  var _origClearInterval=window.clearInterval.bind(window);',
+                '  var _origRAF=window.requestAnimationFrame?window.requestAnimationFrame.bind(window):null;',
+                '  var _timeouts={};',
+                '  var _intervals={};',
+                '  var _rafs=[];',
+                '  var _nextId=1;',
+                '  window.setTimeout=function(fn,delay){',
+                '    var args=Array.prototype.slice.call(arguments,2);',
+                '    var id=_nextId++; delay=delay||0;',
+                '    var rec={fn:fn,args:args,remaining:delay,startedAt:Date.now(),nativeId:null};',
+                '    _timeouts[id]=rec;',
+                '    if(!_paused){',
+                '      rec.nativeId=_origSetTimeout(function(){ delete _timeouts[id]; try{ (typeof fn==="function"?fn:eval).apply(null,args);}catch(e){} },delay);',
+                '    }',
+                '    return id;',
+                '  };',
+                '  window.clearTimeout=function(id){ var r=_timeouts[id]; if(r&&r.nativeId!=null)_origClearTimeout(r.nativeId); delete _timeouts[id]; };',
+                '  window.setInterval=function(fn,delay){',
+                '    var args=Array.prototype.slice.call(arguments,2);',
+                '    var id=_nextId++; delay=delay||0;',
+                '    var rec={fn:fn,args:args,delay:delay,nativeId:null};',
+                '    _intervals[id]=rec;',
+                '    if(!_paused){ rec.nativeId=_origSetInterval(function(){ try{(typeof fn==="function"?fn:eval).apply(null,args);}catch(e){} },delay); }',
+                '    return id;',
+                '  };',
+                '  window.clearInterval=function(id){ var r=_intervals[id]; if(r&&r.nativeId!=null)_origClearInterval(r.nativeId); delete _intervals[id]; };',
+                '  if(_origRAF){',
+                '    window.requestAnimationFrame=function(cb){',
+                '      if(_paused){ _rafs.push(cb); return -1; }',
+                '      return _origRAF(cb);',
+                '    };',
+                '  }',
+                '  function _swallow(e){ if(_paused){ e.stopImmediatePropagation(); e.preventDefault(); } }',
+                '  ["keydown","keyup","keypress","mousedown","mouseup","click","mousemove","wheel","touchstart","touchend","touchmove","pointerdown","pointerup","pointermove"].forEach(function(t){',
+                '    window.addEventListener(t,_swallow,true);',
+                '  });',
+                '  var _audioCtxs=[];',
+                '  var _OrigAC=window.AudioContext||window.webkitAudioContext;',
+                '  if(_OrigAC){',
+                '    function _Wrap(){ var c=new _OrigAC(arguments[0]); _audioCtxs.push(c); return c; }',
+                '    _Wrap.prototype=_OrigAC.prototype;',
+                '    try{ window.AudioContext=_Wrap; }catch(e){}',
+                '    try{ window.webkitAudioContext=_Wrap; }catch(e){}',
+                '  }',
+                '  var _pausedMedia=[];',
+                '  function _pauseMedia(){',
+                '    _pausedMedia=[];',
+                '    document.querySelectorAll("video,audio").forEach(function(m){ if(!m.paused){ _pausedMedia.push(m); try{m.pause();}catch(e){} } });',
+                '  }',
+                '  function _resumeMedia(){ _pausedMedia.forEach(function(m){ try{m.play();}catch(e){} }); _pausedMedia=[]; }',
+                '  window.__ugsPause=function(){',
+                '    if(_paused)return; _paused=true;',
+                '    var now=Date.now();',
+                '    for(var id in _timeouts){ var r=_timeouts[id]; if(r.nativeId!=null){ _origClearTimeout(r.nativeId); r.remaining=Math.max(0,r.remaining-(now-r.startedAt)); r.nativeId=null; } }',
+                '    for(var id2 in _intervals){ var r2=_intervals[id2]; if(r2.nativeId!=null){ _origClearInterval(r2.nativeId); r2.nativeId=null; } }',
+                '    _audioCtxs.forEach(function(c){ try{ if(c.state==="running")c.suspend(); }catch(e){} });',
+                '    _pauseMedia();',
+                '  };',
+                '  window.__ugsResume=function(){',
+                '    if(!_paused)return; _paused=false;',
+                '    var now=Date.now();',
+                '    Object.keys(_timeouts).forEach(function(id){',
+                '      var r=_timeouts[id]; r.startedAt=now;',
+                '      r.nativeId=_origSetTimeout(function(){ delete _timeouts[id]; try{(typeof r.fn==="function"?r.fn:eval).apply(null,r.args);}catch(e){} }, r.remaining);',
+                '    });',
+                '    Object.keys(_intervals).forEach(function(id){',
+                '      var r=_intervals[id];',
+                '      r.nativeId=_origSetInterval(function(){ try{(typeof r.fn==="function"?r.fn:eval).apply(null,r.args);}catch(e){} }, r.delay);',
+                '    });',
+                '    _audioCtxs.forEach(function(c){ try{ if(c.state==="suspended")c.resume(); }catch(e){} });',
+                '    _resumeMedia();',
+                '    var queued=_rafs.slice(); _rafs=[];',
+                '    queued.forEach(function(cb){ try{ _origRAF(cb); }catch(e){} });',
+                '  };',
+                '})();',
+                '<'+'/script>'
+            ].join('\n');
+    
+            function makeIframe() {
+                var f = document.createElement('iframe');
+                f.className = 'game-overlay-iframe';
+                f.style.display = 'none';
+                f.setAttribute('tabindex', '0');
+                f.setAttribute('allow', 'autoplay; fullscreen; gamepad; microphone; camera');
+                // Insert BEFORE resumeScreen so resumeScreen sits on top
+                overlay.insertBefore(f, resumeScreen);
+                return f;
+            }
+    
+            function pauseEntry(entry) {
+                if (!entry || !entry.iframe) return;
+                try { entry.iframe.contentWindow.postMessage({ type: 'ugs-pause' }, '*'); } catch(_) {}
+            }
+            function resumeEntry(entry) {
+                if (!entry || !entry.iframe) return;
+                try { entry.iframe.contentWindow.postMessage({ type: 'ugs-resume' }, '*'); } catch(_) {}
+            }
+    
+            function focusIframe(iframe) {
+                if (!iframe) return;
+                requestAnimationFrame(function() {
+                    try { iframe.focus(); } catch(_) {}
+                    try { iframe.contentWindow.focus(); } catch(_) {}
+                    setTimeout(function() {
+                        try { iframe.focus(); } catch(_) {}
+                        try { iframe.contentWindow.focus(); } catch(_) {}
+                    }, 100);
+                });
+            }
+    
+            // Hide every iframe except `key`, and ensure all others stay paused.
+            function showOnly(key) {
+                for (var k in gameCache) {
+                    if (gameCache[k].iframe) {
+                        var visible = (k === key);
+                        gameCache[k].iframe.style.display = visible ? 'block' : 'none';
+                        if (!visible) pauseEntry(gameCache[k]);
+                    }
+                }
+            }
+    
+            // Run countdown 3 -> 2 -> 1 -> resume
+            function startCountdown(entry) {
+                resumeBtn.style.display = 'none';
+                resumeTitle.style.display = 'none';
+                exitBtn.style.display = 'none';
+                countdownEl.style.display = 'block';
+                skipBtn.style.display = '';
+                // Make background transparent so the game is visible behind the countdown
+                resumeScreen.style.background = 'transparent';
+                resumeScreen.style.backdropFilter = 'none';
+                var n = 3;
+                countdownEl.textContent = n;
+                if (countdownIntervalId) clearInterval(countdownIntervalId);
+                countdownIntervalId = setInterval(function() {
+                    n--;
+                    if (n > 0) {
+                        countdownEl.textContent = n;
+                    } else {
+                        clearInterval(countdownIntervalId);
+                        countdownIntervalId = null;
+                        skipBtn.style.display = 'none';
+                        hideResumeScreen();
+                        resumeEntry(entry);
+                        focusIframe(entry.iframe);
+                    }
+                }, 1000);
+                skipBtn.onclick = function() {
+                    clearInterval(countdownIntervalId);
+                    countdownIntervalId = null;
+                    skipBtn.style.display = 'none';
+                    hideResumeScreen();
+                    resumeEntry(entry);
+                    focusIframe(entry.iframe);
+                };
+            }
+    
+            // Show a re-opened game with the Resume? gate
+            function showGameWithResumeGate(key) {
+                showOnly(key);
+                currentGameKey = key;
+                var entry = gameCache[key];
+                title.textContent = entry.displayName || 'Game';
+                overlay.classList.add('active');
+                // game stays paused; show resume screen
+                showResumeScreen();
+                // Wire buttons
+                resumeBtn.onclick = function() { startCountdown(entry); };
+                exitBtn.onclick = function() { pauseGame(); };
+            }
+    
+            function openGame(displayName, url) {
+                var key = keyFor(displayName);
+    
+                if (gameCache[key]) {
+                    // Re-open: show Resume? gate, do NOT auto-resume
+                    showGameWithResumeGate(key);
+                    return;
+                }
+    
+                // First time: load and play immediately
+                var entry = {
+                    displayName: displayName,
+                    url: url,
+                    iframe: makeIframe(),
+                    html: null,
+                    blobUrl: null
+                };
+                gameCache[key] = entry;
+                currentGameKey = key;
+                title.textContent = displayName || 'Game';
+                overlay.classList.add('active');
+                hideResumeScreen();
+    
+                fetch(url + '?t=' + Date.now())
+                    .then(function(resp) { if (!resp.ok) throw new Error('HTTP ' + resp.status); return resp.text(); })
+                    .then(function(html) {
+                        var injectPoint = html.indexOf('<head>');
+                        var modifiedHtml;
+                        if (injectPoint !== -1) {
+                            var afterHead = injectPoint + '<head>'.length;
+                            modifiedHtml = html.slice(0, afterHead) + LS_BRIDGE_SCRIPT + html.slice(afterHead);
+                        } else {
+                            modifiedHtml = LS_BRIDGE_SCRIPT + html;
+                        }
+                        var blob = new Blob([modifiedHtml], { type: 'text/html' });
+                        entry.blobUrl = URL.createObjectURL(blob);
+                        entry.html = modifiedHtml;
+                        entry.iframe.style.display = 'block';
+                        entry.iframe.src = entry.blobUrl;
+                        entry.iframe.addEventListener('load', function onLoad() {
+                            entry.iframe.removeEventListener('load', onLoad);
+                            focusIframe(entry.iframe);
+                        });
+                        showOnly(key);
+                    })
+                    .catch(function(err) {
+                        console.error('Failed to load game:', err);
+                        if (entry.iframe && entry.iframe.parentNode) entry.iframe.parentNode.removeChild(entry.iframe);
+                        delete gameCache[key];
+                        window.open(url, '_blank');
+                        pauseGame();
+                    });
+            }
+    
+            function pauseGame() {
+                if (countdownIntervalId) {
+                    clearInterval(countdownIntervalId);
+                    countdownIntervalId = null;
+                }
+                if (currentGameKey && gameCache[currentGameKey]) {
+                    pauseEntry(gameCache[currentGameKey]);
+                }
+                hideResumeScreen();
+                overlay.classList.remove('active');
+            }
+    
+            closeBtn.addEventListener('click', pauseGame);
+    
+            pauseBtn.addEventListener('click', function() {
+                if (!currentGameKey || !gameCache[currentGameKey]) return;
+                var entry = gameCache[currentGameKey];
+                pauseEntry(entry);
+                showResumeScreen();
+                resumeBtn.onclick = function() {
+                    hideResumeScreen();
+                    resumeEntry(entry);
+                    focusIframe(entry.iframe);
+                };
+                exitBtn.onclick = function() { pauseGame(); };
+            });
+    
+            newTabBtn.addEventListener('click', function() {
+                var entry = currentGameKey ? gameCache[currentGameKey] : null;
+                if (!entry || !entry.html) return;
+                var tab = window.open('about:blank', '_blank');
+                if (tab) {
+                    tab.document.open();
+                    tab.document.write(entry.html);
+                    tab.document.close();
+                }
+            });
+    
+            downloadBtn.addEventListener('click', function() {
+                var entry = currentGameKey ? gameCache[currentGameKey] : null;
+                if (!entry) return;
+                var displayName = entry.displayName || 'game';
+                var safeName = displayName.replace(/[^a-zA-Z0-9 _\-()]/g, '').replace(/\s+/g, '_') || 'game';
+    
+                if (entry.html) {
+                    var blob = new Blob([entry.html], { type: 'text/html' });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = safeName + '.html';
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    URL.revokeObjectURL(a.href);
+                } else if (entry.url) {
+                    var a2 = document.createElement('a');
+                    a2.href = entry.url; a2.download = safeName + '.html'; a2.target = '_blank';
+                    document.body.appendChild(a2); a2.click(); document.body.removeChild(a2);
+                }
+            });
+    
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && overlay.classList.contains('active')) pauseGame();
+            });
+    
+            document.addEventListener('click', function(e) {
+                var target = e.target;
+                if (target.closest && target.closest('#lolbutton')) return;
+                if (target.closest && target.closest('#game-overlay')) return;
+                if (target.closest && target.closest('#random-game-btn')) return;
+    
+                var gameBtn = target.closest ? target.closest('.buttons-container > input, .buttons-container > button') : null;
+                if (!gameBtn) return;
+    
+                e.preventDefault();
+                e.stopPropagation();
+    
+                var originalName = gameBtn.getAttribute('data-original-name');
+                if (!originalName) {
+                    var btnText = (gameBtn.value || gameBtn.textContent || '').trim();
+                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
+                }
+                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
+                var filename = 'cl' + originalName;
+                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
+                var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
+    
+                openGame(displayName, url);
+            }, true);
+    
+            // Expose openGame globally so the random button can use it
+            window._ugsOpenGame = openGame;
+    
+            // Watch the overlay for active class changes to show/hide the random button
+            new MutationObserver(function() {
+                var b = document.getElementById('random-game-btn');
+                if (!b) return;
+                var isOpen = overlay.classList.contains('active');
+                b.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                b.style.opacity = isOpen ? '0' : '1';
+                b.style.pointerEvents = isOpen ? 'none' : 'auto';
+                b.style.transform = isOpen ? 'scale(0.8)' : 'scale(1)';
+            }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+        })();
+        </script>
+    
+        <!-- 7. Random game button (fixed top-right) -->
+        <script>
+        (function() {
+            var btn = document.createElement('button');
+            btn.id = 'random-game-btn';
+            btn.title = 'Random Game';
+            btn.innerHTML = '&#127922;';
+            btn.style.cssText = [
+                'position:fixed',
+                'top:16px',
+                'right:16px',
+                'z-index:99999',
+                'background:linear-gradient(135deg,#1a0b2e,#4b1d52)',
+                'border:1px solid rgba(255,255,255,0.25)',
+                'border-radius:10px',
+                'color:white',
+                'font-size:15px',
+                'font-weight:700',
+                'padding:10px 18px',
+                'cursor:pointer',
+                'box-shadow:0 4px 16px rgba(0,0,0,0.5)',
+                'transition:transform 0.15s ease, filter 0.15s ease',
+                'letter-spacing:0.3px'
+            ].join(';');
+    
+            btn.addEventListener('mouseenter', function() {
+                btn.style.transform = 'scale(1.07)';
+                btn.style.filter = 'brightness(1.2)';
+            });
+            btn.addEventListener('mouseleave', function() {
+                btn.style.transform = 'scale(1)';
+                btn.style.filter = 'none';
+            });
+    
+            btn.addEventListener('click', function() {
+                var gameBtns = Array.from(document.querySelectorAll('.buttons-container > input, .buttons-container > button'));
+                if (gameBtns.length === 0) {
+                    alert('Games are still loading — try again in a moment!');
+                    return;
+                }
+                var pick = gameBtns[Math.floor(Math.random() * gameBtns.length)];
+                var originalName = pick.getAttribute('data-original-name');
+                if (!originalName) {
+                    var btnText = (pick.value || pick.textContent || '').trim();
+                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
+                }
+                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
+                var filename = 'cl' + originalName;
+                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
+                var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
+                if (window._ugsOpenGame) {
+                    window._ugsOpenGame(displayName, url);
+                } else {
+                    pick.click();
+                }
+            });
+    
+            document.body.appendChild(btn);
+        })();
+        </script>
+    
+    </body>
+    </html>
+  </foreignObject>
+</svg>
