@@ -310,15 +310,15 @@
                     // If we already stored the original name, use that for lookup
                     var originalName = btn.getAttribute('data-original-name');
                     if (originalName) {
-                        var prettyName = window._ugsNameMap && window._ugsNameMap[originalName];
-                        if (prettyName && currentText !== prettyName) {
+                        var prettyName = window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName];
+                        if (prettyName &amp;&amp; currentText !== prettyName) {
                             if (btn.tagName === 'INPUT') { btn.value = prettyName; }
                             else { btn.textContent = prettyName; }
                         }
                         return;
                     }
                     // First time: try lookup with current text
-                    if (window._ugsNameMap && window._ugsNameMap[currentText]) {
+                    if (window._ugsNameMap &amp;&amp; window._ugsNameMap[currentText]) {
                         btn.setAttribute('data-original-name', currentText);
                         var prettyName = window._ugsNameMap[currentText];
                         if (btn.tagName === 'INPUT') { btn.value = prettyName; }
@@ -549,7 +549,7 @@
                     for (const mut of mutations) {
                         mut.addedNodes.forEach(node => {
                             if (node.nodeType === 1) {
-                                if (node.matches && node.matches('button, input')) setupButton(node);
+                                if (node.matches &amp;&amp; node.matches('button, input')) setupButton(node);
                                 if (node.querySelectorAll) node.querySelectorAll('button, input').forEach(setupButton);
                             }
                         });
@@ -582,7 +582,7 @@
             var currentGameKey = null;
             var countdownIntervalId = null;
     
-            if (originalIframe && originalIframe.parentNode) {
+            if (originalIframe &amp;&amp; originalIframe.parentNode) {
                 originalIframe.parentNode.removeChild(originalIframe);
             }
     
@@ -640,7 +640,7 @@
                 if (!e.data || e.data.type !== 'ugs-ls-bridge') return;
                 var senderKey = null;
                 for (var k in gameCache) {
-                    if (gameCache[k].iframe && gameCache[k].iframe.contentWindow === e.source) {
+                    if (gameCache[k].iframe &amp;&amp; gameCache[k].iframe.contentWindow === e.source) {
                         senderKey = k; break;
                     }
                 }
@@ -697,7 +697,7 @@
                 '    }',
                 '    return id;',
                 '  };',
-                '  window.clearTimeout=function(id){ var r=_timeouts[id]; if(r&&r.nativeId!=null)_origClearTimeout(r.nativeId); delete _timeouts[id]; };',
+                '  window.clearTimeout=function(id){ var r=_timeouts[id]; if(r&amp;&amp;r.nativeId!=null)_origClearTimeout(r.nativeId); delete _timeouts[id]; };',
                 '  window.setInterval=function(fn,delay){',
                 '    var args=Array.prototype.slice.call(arguments,2);',
                 '    var id=_nextId++; delay=delay||0;',
@@ -706,7 +706,7 @@
                 '    if(!_paused){ rec.nativeId=_origSetInterval(function(){ try{(typeof fn==="function"?fn:eval).apply(null,args);}catch(e){} },delay); }',
                 '    return id;',
                 '  };',
-                '  window.clearInterval=function(id){ var r=_intervals[id]; if(r&&r.nativeId!=null)_origClearInterval(r.nativeId); delete _intervals[id]; };',
+                '  window.clearInterval=function(id){ var r=_intervals[id]; if(r&amp;&amp;r.nativeId!=null)_origClearInterval(r.nativeId); delete _intervals[id]; };',
                 '  if(_origRAF){',
                 '    window.requestAnimationFrame=function(cb){',
                 '      if(_paused){ _rafs.push(cb); return -1; }',
@@ -899,7 +899,7 @@
                     })
                     .catch(function(err) {
                         console.error('Failed to load game:', err);
-                        if (entry.iframe && entry.iframe.parentNode) entry.iframe.parentNode.removeChild(entry.iframe);
+                        if (entry.iframe &amp;&amp; entry.iframe.parentNode) entry.iframe.parentNode.removeChild(entry.iframe);
                         delete gameCache[key];
                         window.open(url, '_blank');
                         pauseGame();
@@ -911,7 +911,7 @@
                     clearInterval(countdownIntervalId);
                     countdownIntervalId = null;
                 }
-                if (currentGameKey && gameCache[currentGameKey]) {
+                if (currentGameKey &amp;&amp; gameCache[currentGameKey]) {
                     pauseEntry(gameCache[currentGameKey]);
                 }
                 hideResumeScreen();
@@ -965,14 +965,14 @@
             });
     
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && overlay.classList.contains('active')) pauseGame();
+                if (e.key === 'Escape' &amp;&amp; overlay.classList.contains('active')) pauseGame();
             });
     
             document.addEventListener('click', function(e) {
                 var target = e.target;
-                if (target.closest && target.closest('#lolbutton')) return;
-                if (target.closest && target.closest('#game-overlay')) return;
-                if (target.closest && target.closest('#random-game-btn')) return;
+                if (target.closest &amp;&amp; target.closest('#lolbutton')) return;
+                if (target.closest &amp;&amp; target.closest('#game-overlay')) return;
+                if (target.closest &amp;&amp; target.closest('#random-game-btn')) return;
     
                 var gameBtn = target.closest ? target.closest('.buttons-container > input, .buttons-container > button') : null;
                 if (!gameBtn) return;
@@ -983,11 +983,11 @@
                 var originalName = gameBtn.getAttribute('data-original-name');
                 if (!originalName) {
                     var btnText = (gameBtn.value || gameBtn.textContent || '').trim();
-                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
+                    originalName = (window._ugsReverseNameMap &amp;&amp; window._ugsReverseNameMap[btnText]) || btnText;
                 }
-                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
+                var displayName = (window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName]) || originalName;
                 var filename = 'cl' + originalName;
-                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
+                if (!(filename.includes('.') &amp;&amp; filename.lastIndexOf('.') > 0)) filename += '.html';
                 var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
     
                 openGame(displayName, url);
@@ -1015,7 +1015,7 @@
             var btn = document.createElement('button');
             btn.id = 'random-game-btn';
             btn.title = 'Random Game';
-            btn.innerHTML = '&#127922;';
+            btn.innerHTML = '&amp;#127922;';
             btn.style.cssText = [
                 'position:fixed',
                 'top:16px',
@@ -1053,11 +1053,11 @@
                 var originalName = pick.getAttribute('data-original-name');
                 if (!originalName) {
                     var btnText = (pick.value || pick.textContent || '').trim();
-                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
+                    originalName = (window._ugsReverseNameMap &amp;&amp; window._ugsReverseNameMap[btnText]) || btnText;
                 }
-                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
+                var displayName = (window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName]) || originalName;
                 var filename = 'cl' + originalName;
-                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
+                if (!(filename.includes('.') &amp;&amp; filename.lastIndexOf('.') > 0)) filename += '.html';
                 var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
                 if (window._ugsOpenGame) {
                     window._ugsOpenGame(displayName, url);
