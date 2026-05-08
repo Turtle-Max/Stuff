@@ -2,7 +2,7 @@
   <body xmlns="http://www.w3.org/1999/xhtml">
     <!-- Paste as direct child of your <foreignObject> element -->
 <body xmlns="http://www.w3.org/1999/xhtml"><style>
-//<![CDATA[
+/*<![CDATA[*/
 
         /* ===== CONSTELLATION BACKGROUND ===== */
         body {
@@ -218,7 +218,7 @@
             }
         }
     
-//]]>
+/*]]>*/
 </style>
     <canvas id="constellation-canvas"></canvas>
 
