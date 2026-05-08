@@ -1,4 +1,5 @@
-<svg>
+<svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" style="position:fixed; inset:0; width:100%; height:100%;">
+  
 <foreignObject x="0" y="0" width="100%" height="100%">
   <body xmlns="http://www.w3.org/1999/xhtml">
       <!-- Paste as direct child of your <foreignObject> element -->
