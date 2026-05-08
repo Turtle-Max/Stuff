@@ -1,231 +1,16 @@
-<svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Standard SVG shape -->
-  <rect x="10" y="10" width="380" height="180" fill="#f0f0f0" stroke="#ccc"/>
-
-  <!-- HTML Container -->
-  <foreignObject x="50" y="50" width="300" height="100">
-    <!-- Use standard HTML inside here -->
-    <!--UGS Files-->
-    <html>
-    <head>
-        <title>UGS Files</title>
-        <style>
-            /* ===== CONSTELLATION BACKGROUND ===== */
-            body {
-                font-family: Arial, sans-serif;
-                background: #000;
-                min-height: 100vh; margin: 0; padding: 0;
-                display: flex;
-                overflow: hidden;
-            }
-            canvas#constellation-canvas {
-                position: fixed;
-                inset: 0;
-                z-index: -1;
-                pointer-events: none;
-            }
-    
-            /* ---- SIDEBAR ---- */
-            .sidebar {
-                position: fixed; left: 0; top: 0;
-                width: 80px; height: 100vh;
-                background: rgba(0, 0, 0, 0.3);
-                backdrop-filter: blur(10px);
-                padding: 20px 10px;
-                display: flex; flex-direction: column; gap: 8px;
-                overflow-y: auto;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-                z-index: 1000;
-            }
-            .sidebar::-webkit-scrollbar { width: 6px; }
-            .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
-            .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
-    
-            .sidebar-btn {
-                border: none; padding: 12px; font-size: 18px; font-weight: 700;
-                border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
-                color: white; text-align: center; min-height: 45px;
-            }
-            .sidebar-btn:hover { transform: scale(1.08); filter: brightness(1.1); }
-    
-            /* ---- MAIN CONTENT ---- */
-    
-            .main-content {
-                margin-left: 100px;
-                flex: 1; padding: 20px; max-width: 1200px;
-                position: relative; z-index: 1;
-                overflow-y: auto; height: 100vh;
-            }
-            h1 { color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-            .letter-section { margin-bottom: 40px; padding: 0 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
-            .letter-header {
-                color: white; font-size: 32px; font-weight: bold;
-                margin-bottom: 15px; padding-bottom: 10px;
-                border-bottom: 3px solid rgba(255,255,255,0.3);
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            }
-    
-            /* ===== GAME BUTTONS ===== */
-            .buttons-container > * {
-                width: 110px !important; height: 110px !important;
-                min-width: 110px !important; max-width: 110px !important;
-                min-height: 110px !important; max-height: 110px !important;
-                border: none; border-radius: 4px; cursor: pointer;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                transition: all 0.3s ease; color: white; font-weight: 700;
-                font-size: 12px; text-align: center; line-height: 1.2;
-                white-space: normal; word-wrap: break-word; overflow: hidden;
-                text-overflow: ellipsis; padding: 6px;
-                display: inline-flex !important; align-items: center; justify-content: center;
-                box-sizing: border-box;
-            }
-            .buttons-container > *:hover {
-                transform: scale(1.08) !important;
-                box-shadow: 0 6px 14px rgba(0,0,0,0.4);
-            }
-            .buttons-container > *:active {
-                transform: scale(0.96) !important;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            }
-            .buttons-container {
-                display: flex; flex-wrap: wrap; gap: 16px;
-                justify-content: flex-start;
-                padding: 20px 0;
-            }
-    
-            .empty-message { color: rgba(255,255,255,0.6); font-style: italic; text-align: center; padding: 20px; }
-            .no-results { color: rgba(255,255,255,0.6); text-align: center; font-style: italic; padding: 20px; display: none; }
-            #lolbutton {
-                background: linear-gradient(135deg, #00b2ff, #006aff);
-                border: none; border-radius: 4px; padding: 10px 20px; font-size: 14px;
-                font-weight: 700; color: white; cursor: pointer;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                transition: all 0.3s ease; margin: 10px auto; display: block; width: fit-content;
-            }
-            #lolbutton:hover { transform: scale(1.05); background: linear-gradient(135deg, #33ccff, #3385ff); }
-    
-            /* ===== GAME OVERLAY (iframe) ===== */
-            .game-overlay {
-                position: fixed;
-                inset: 0;
-                z-index: 10000;
-                display: flex;
-                flex-direction: column;
-                background: rgba(0, 0, 0, 0.92);
-                opacity: 0;
-                visibility: hidden;
-                transition: opacity 0.3s ease, visibility 0.3s ease;
-            }
-            .game-overlay.active {
-                opacity: 1;
-                visibility: visible;
-            }
-            .game-overlay-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 12px 20px;
-                background: rgba(0, 0, 0, 0.6);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-                flex-shrink: 0;
-            }
-            .game-overlay-title {
-                color: white;
-                font-size: 18px;
-                font-weight: 600;
-                text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-            }
-            .game-overlay-close {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: white;
-                font-size: 24px;
-                width: 36px;
-                height: 36px;
-                border-radius: 6px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s ease;
-                line-height: 1;
-            }
-            .game-overlay-close:hover {
-                background: rgba(255, 70, 70, 0.6);
-                border-color: rgba(255, 70, 70, 0.8);
-            }
-            .game-overlay-newtab,
-            .game-overlay-download,
-            .game-overlay-pause {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                color: white;
-                width: 36px;
-                height: 36px;
-                border-radius: 6px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s ease;
-                padding: 0;
-            }
-            .game-overlay-newtab:hover {
-                background: rgba(100, 180, 255, 0.4);
-                border-color: rgba(100, 180, 255, 0.6);
-            }
-            .game-overlay-download:hover {
-                background: rgba(0, 120, 255, 0.5);
-                border-color: rgba(100, 180, 255, 0.6);
-            }
-            .game-overlay-pause:hover {
-                background: rgba(255, 200, 50, 0.4);
-                border-color: rgba(255, 200, 50, 0.6);
-            }
-            .game-overlay-newtab svg,
-            .game-overlay-download svg,
-            .game-overlay-pause svg {
-                width: 18px;
-                height: 18px;
-                stroke: white;
-                fill: none;
-                stroke-width: 2;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-            }
-            .game-overlay-download svg {
-                fill: white;
-                stroke: none;
-            }
-            .game-overlay-pause svg {
-                fill: white;
-                stroke: none;
-            }
-            .game-overlay-actions {
-                display: flex;
-                gap: 8px;
-            }
-            .game-overlay-iframe {
-                flex: 1;
-                width: 100%;
-                border: none;
-                background: #000;
-            }
-    
-            @media (max-width: 768px) {
-                .sidebar { width: 60px; padding: 15px 5px; }
-                .sidebar-btn { padding: 8px; font-size: 16px; }
-                .main-content { margin-left: 70px; }
-                .buttons-container > * {
-                    width: 90px !important; height: 90px !important;
-                    min-width: 90px !important; max-width: 90px !important;
-                    min-height: 90px !important; max-height: 90px !important;
-                    font-size: 10px; padding: 4px;
-                }
-            }
-        </style>
-    </head>
-    <body>
+<!-- Use style="..." directly on the SVG and set the viewport attributes -->
+<svg 
+  width="100vw" 
+  height="100vh" 
+  viewBox="0 0 100 100" 
+  preserveAspectRatio="none"
+  style="display: block; position: fixed; top: 0; left: 0;"
+  xmlns="http://w3.org">
+  
+  <foreignObject width="100%" height="100%">
+    <!--comment-->
+    <!-- Paste inside your <foreignObject> element -->
+    <div xmlns="http://www.w3.org/1999/xhtml">
         <canvas id="constellation-canvas"></canvas>
     
         <div class="sidebar" id="sidebar"></div>
@@ -234,27 +19,22 @@
             <h1>UGS Files</h1>
             <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
                 Files from
-                <a href="https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/"
-                   target="_blank"
-                   style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                <a href="https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/" target="_blank" style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
                     Ultimate Game Stash Google Doc
                 </a>
             </h2>
             <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
                 Discord Server:
-                <a href="https://discord.gg/rmVsAqkpkA"
-                   target="_blank"
-                   style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                <a href="https://discord.gg/rmVsAqkpkA" target="_blank" style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
                     https://discord.gg/rmVsAqkpkA
                 </a>
             </h2>
     
-            <button id="lolbutton" onclick="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@latest/game.js';document.body.appendChild(s);">
+            <button id="lolbutton" onclick="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/ugs-singlefiles@1.0.6/game.js';document.body.appendChild(s);">
                 Click to load if it isnt loading
             </button>
             <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
-                <input type="text" placeholder="Search..." id="searchInput"
-                       style="padding: 13px; width: 100%; max-width: 420px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(7, 105, 218, 0.1);"/>
+                <input type="text" placeholder="Search..." id="searchInput" style="padding: 13px; width: 100%; max-width: 420px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(7, 105, 218, 0.1);" />
             </h2>
             <div id="sections-container"></div>
             <div class="no-results" id="noResults">No games found matching your search.</div>
@@ -266,22 +46,22 @@
                 <div class="game-overlay-title" id="game-overlay-title">Game</div>
                 <div class="game-overlay-actions">
                     <button class="game-overlay-pause" id="game-overlay-pause" title="Pause">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <rect x="6" y="4" width="4" height="16" rx="1"/>
-                            <rect x="14" y="4" width="4" height="16" rx="1"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+                            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
                         </svg>
                     </button>
                     <button class="game-overlay-download" id="game-overlay-download" title="Download">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 16l-5-5h3V4h4v7h3l-5 5z"/>
-                            <path d="M20 18H4v2h16v-2z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+                            <path d="M12 16l-5-5h3V4h4v7h3l-5 5z"></path>
+                            <path d="M20 18H4v2h16v-2z"></path>
                         </svg>
                     </button>
                     <button class="game-overlay-newtab" id="game-overlay-newtab" title="Open in new tab">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14 3h7v7"/>
-                            <path d="M10 14L21 3"/>
-                            <path d="M21 14v7H3V3h7"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+                            <path d="M14 3h7v7"></path>
+                            <path d="M10 14L21 3"></path>
+                            <path d="M21 14v7H3V3h7"></path>
                         </svg>
                     </button>
                     <button class="game-overlay-close" id="game-overlay-close" title="Close">×</button>
@@ -291,16 +71,18 @@
         </div>
     
         <!-- 1a. Pretty display name map -->
-        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.20/names.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.23/names.js"></script>
         
         <!-- 1b. Games data -->
         <script src="https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/games.js"></script>
     
         <!-- 2. UGS script -->
-        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.20/UGS.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/Turtle-Max/Stuff@v1.0.23/UGS.js"></script>
     
         <!-- 2b. Apply pretty display names from _ugsNameMap -->
         <script>
+    //<![CDATA[
+    
         (function() {
             function applyNameMap() {
                 var btns = document.querySelectorAll('.buttons-container > input, .buttons-container > button');
@@ -310,15 +92,15 @@
                     // If we already stored the original name, use that for lookup
                     var originalName = btn.getAttribute('data-original-name');
                     if (originalName) {
-                        var prettyName = window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName];
-                        if (prettyName &amp;&amp; currentText !== prettyName) {
+                        var prettyName = window._ugsNameMap && window._ugsNameMap[originalName];
+                        if (prettyName && currentText !== prettyName) {
                             if (btn.tagName === 'INPUT') { btn.value = prettyName; }
                             else { btn.textContent = prettyName; }
                         }
                         return;
                     }
                     // First time: try lookup with current text
-                    if (window._ugsNameMap &amp;&amp; window._ugsNameMap[currentText]) {
+                    if (window._ugsNameMap && window._ugsNameMap[currentText]) {
                         btn.setAttribute('data-original-name', currentText);
                         var prettyName = window._ugsNameMap[currentText];
                         if (btn.tagName === 'INPUT') { btn.value = prettyName; }
@@ -348,10 +130,14 @@
                 observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
             });
         })();
-        </script>
+        
+    //]]>
+    </script>
     
         <!-- 3. Constellation background -->
         <script>
+    //<![CDATA[
+    
             (function() {
                 const canvas = document.getElementById('constellation-canvas');
                 const ctx = canvas.getContext('2d');
@@ -417,10 +203,14 @@
                 window.addEventListener('resize', resize);
                 resize(); initStars(); animate();
             })();
-        </script>
+        
+    //]]>
+    </script>
     
         <!-- 4. Space-like gradients -->
         <script>
+    //<![CDATA[
+    
             (function() {
                 const SPACE_GRADIENTS = [
                     ['#0b0f1c', '#1a1b3a'],
@@ -475,10 +265,14 @@
                 }
                 tryApply();
             })();
-        </script>
+        
+    //]]>
+    </script>
     
         <!-- 5. Bounce effect -->
         <script>
+    //<![CDATA[
+    
             (function() {
                 const BOUNCE_PERIOD = 150;
                 const THRESHOLD = 0.0005;
@@ -549,7 +343,7 @@
                     for (const mut of mutations) {
                         mut.addedNodes.forEach(node => {
                             if (node.nodeType === 1) {
-                                if (node.matches &amp;&amp; node.matches('button, input')) setupButton(node);
+                                if (node.matches && node.matches('button, input')) setupButton(node);
                                 if (node.querySelectorAll) node.querySelectorAll('button, input').forEach(setupButton);
                             }
                         });
@@ -565,10 +359,14 @@
                 setTimeout(setupAllButtons, 1000);
                 setTimeout(setupAllButtons, 3000);
             })();
-        </script>
+        
+    //]]>
+    </script>
     
         <!-- 6. Game overlay: TRUE pause on close, Resume? + countdown on re-open, auto-focus -->
         <script>
+    //<![CDATA[
+    
         (function() {
             var overlay = document.getElementById('game-overlay');
             var originalIframe = document.getElementById('game-overlay-iframe');
@@ -582,7 +380,7 @@
             var currentGameKey = null;
             var countdownIntervalId = null;
     
-            if (originalIframe &amp;&amp; originalIframe.parentNode) {
+            if (originalIframe && originalIframe.parentNode) {
                 originalIframe.parentNode.removeChild(originalIframe);
             }
     
@@ -640,7 +438,7 @@
                 if (!e.data || e.data.type !== 'ugs-ls-bridge') return;
                 var senderKey = null;
                 for (var k in gameCache) {
-                    if (gameCache[k].iframe &amp;&amp; gameCache[k].iframe.contentWindow === e.source) {
+                    if (gameCache[k].iframe && gameCache[k].iframe.contentWindow === e.source) {
                         senderKey = k; break;
                     }
                 }
@@ -697,7 +495,7 @@
                 '    }',
                 '    return id;',
                 '  };',
-                '  window.clearTimeout=function(id){ var r=_timeouts[id]; if(r&amp;&amp;r.nativeId!=null)_origClearTimeout(r.nativeId); delete _timeouts[id]; };',
+                '  window.clearTimeout=function(id){ var r=_timeouts[id]; if(r&&r.nativeId!=null)_origClearTimeout(r.nativeId); delete _timeouts[id]; };',
                 '  window.setInterval=function(fn,delay){',
                 '    var args=Array.prototype.slice.call(arguments,2);',
                 '    var id=_nextId++; delay=delay||0;',
@@ -706,7 +504,7 @@
                 '    if(!_paused){ rec.nativeId=_origSetInterval(function(){ try{(typeof fn==="function"?fn:eval).apply(null,args);}catch(e){} },delay); }',
                 '    return id;',
                 '  };',
-                '  window.clearInterval=function(id){ var r=_intervals[id]; if(r&amp;&amp;r.nativeId!=null)_origClearInterval(r.nativeId); delete _intervals[id]; };',
+                '  window.clearInterval=function(id){ var r=_intervals[id]; if(r&&r.nativeId!=null)_origClearInterval(r.nativeId); delete _intervals[id]; };',
                 '  if(_origRAF){',
                 '    window.requestAnimationFrame=function(cb){',
                 '      if(_paused){ _rafs.push(cb); return -1; }',
@@ -899,7 +697,7 @@
                     })
                     .catch(function(err) {
                         console.error('Failed to load game:', err);
-                        if (entry.iframe &amp;&amp; entry.iframe.parentNode) entry.iframe.parentNode.removeChild(entry.iframe);
+                        if (entry.iframe && entry.iframe.parentNode) entry.iframe.parentNode.removeChild(entry.iframe);
                         delete gameCache[key];
                         window.open(url, '_blank');
                         pauseGame();
@@ -911,7 +709,7 @@
                     clearInterval(countdownIntervalId);
                     countdownIntervalId = null;
                 }
-                if (currentGameKey &amp;&amp; gameCache[currentGameKey]) {
+                if (currentGameKey && gameCache[currentGameKey]) {
                     pauseEntry(gameCache[currentGameKey]);
                 }
                 hideResumeScreen();
@@ -965,14 +763,14 @@
             });
     
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' &amp;&amp; overlay.classList.contains('active')) pauseGame();
+                if (e.key === 'Escape' && overlay.classList.contains('active')) pauseGame();
             });
     
             document.addEventListener('click', function(e) {
                 var target = e.target;
-                if (target.closest &amp;&amp; target.closest('#lolbutton')) return;
-                if (target.closest &amp;&amp; target.closest('#game-overlay')) return;
-                if (target.closest &amp;&amp; target.closest('#random-game-btn')) return;
+                if (target.closest && target.closest('#lolbutton')) return;
+                if (target.closest && target.closest('#game-overlay')) return;
+                if (target.closest && target.closest('#random-game-btn')) return;
     
                 var gameBtn = target.closest ? target.closest('.buttons-container > input, .buttons-container > button') : null;
                 if (!gameBtn) return;
@@ -983,11 +781,11 @@
                 var originalName = gameBtn.getAttribute('data-original-name');
                 if (!originalName) {
                     var btnText = (gameBtn.value || gameBtn.textContent || '').trim();
-                    originalName = (window._ugsReverseNameMap &amp;&amp; window._ugsReverseNameMap[btnText]) || btnText;
+                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
                 }
-                var displayName = (window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName]) || originalName;
+                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
                 var filename = 'cl' + originalName;
-                if (!(filename.includes('.') &amp;&amp; filename.lastIndexOf('.') > 0)) filename += '.html';
+                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
                 var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
     
                 openGame(displayName, url);
@@ -1007,15 +805,19 @@
                 b.style.transform = isOpen ? 'scale(0.8)' : 'scale(1)';
             }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
         })();
-        </script>
+        
+    //]]>
+    </script>
     
         <!-- 7. Random game button (fixed top-right) -->
         <script>
+    //<![CDATA[
+    
         (function() {
             var btn = document.createElement('button');
             btn.id = 'random-game-btn';
             btn.title = 'Random Game';
-            btn.innerHTML = '&amp;#127922;';
+            btn.innerHTML = '&#127922;';
             btn.style.cssText = [
                 'position:fixed',
                 'top:16px',
@@ -1053,11 +855,11 @@
                 var originalName = pick.getAttribute('data-original-name');
                 if (!originalName) {
                     var btnText = (pick.value || pick.textContent || '').trim();
-                    originalName = (window._ugsReverseNameMap &amp;&amp; window._ugsReverseNameMap[btnText]) || btnText;
+                    originalName = (window._ugsReverseNameMap && window._ugsReverseNameMap[btnText]) || btnText;
                 }
-                var displayName = (window._ugsNameMap &amp;&amp; window._ugsNameMap[originalName]) || originalName;
+                var displayName = (window._ugsNameMap && window._ugsNameMap[originalName]) || originalName;
                 var filename = 'cl' + originalName;
-                if (!(filename.includes('.') &amp;&amp; filename.lastIndexOf('.') > 0)) filename += '.html';
+                if (!(filename.includes('.') && filename.lastIndexOf('.') > 0)) filename += '.html';
                 var url = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/' + encodeURIComponent(filename);
                 if (window._ugsOpenGame) {
                     window._ugsOpenGame(displayName, url);
@@ -1068,9 +870,11 @@
     
             document.body.appendChild(btn);
         })();
-        </script>
+        
+    //]]>
+    </script>
     
-    </body>
-    </html>
+    
+    </div>
   </foreignObject>
 </svg>
