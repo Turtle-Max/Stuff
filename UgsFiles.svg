@@ -1,3 +1,4 @@
+<svg>
 <foreignObject x="0" y="0" width="100%" height="100%">
   <body xmlns="http://www.w3.org/1999/xhtml">
       <!-- Paste as direct child of your <foreignObject> element -->
@@ -1087,3 +1088,4 @@
 </body>
   </body>
 </foreignObject>
+</svg>
